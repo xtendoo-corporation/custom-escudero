@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="resource_booking_view_form_inherit" model="ir.ui.view">
+        <field name="name">resource.booking.view.form.inherit</field>
+        <field name="model">resource.booking</field>
+        <field name="inherit_id" ref="resource_booking.resource_booking_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='combination_id']" position="before">
+                <field name="has_overlap" invisible="1" />
+                <field name="type_color" invisible="1" />
+            </xpath>
+            <xpath expr="//field[@name='combination_id']" position="after">
+                <span class="fa fa-exclamation-triangle text-warning"
+                    title="Solapamiento detectado: los recursos seleccionados están ocupados."
+                    invisible="not has_overlap"
+                    style="font-size: 1.5rem; margin-left: 5px;" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="resource_booking_view_calendar_inherit" model="ir.ui.view">
+        <field name="name">resource.booking.view.calendar.inherit</field>
+        <field name="model">resource.booking</field>
+        <field name="inherit_id" ref="resource_booking.resource_booking_view_calendar" />
+        <field name="arch" type="xml">
+            <xpath expr="//calendar" position="attributes">
+                <attribute name="color">type_color</attribute>
+            </xpath>
+            <xpath expr="//field[@name='type_id']" position="after">
+                <field name="type_color" invisible="1" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="resource_booking_type_view_form_inherit" model="ir.ui.view">
+        <field name="name">resource.booking.type.view.form.inherit</field>
+        <field name="model">resource.booking.type</field>
+        <field name="inherit_id" ref="resource_booking.resource_booking_type_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <div class="d-flex align-items-center mt-2">
+                    <label for="color" string="Color del tipo:" class="me-2" />
+                    <field name="color" widget="color_picker" />
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
