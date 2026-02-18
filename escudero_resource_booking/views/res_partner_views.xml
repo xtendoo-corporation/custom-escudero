@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- We don't need to inherit the view if we are just changing the method, 
+         but we'll keep this file for future customizations if needed. 
+         Wait, the user said 'ya están creados solo debes modificarlos por herencia'.
+         If they meant the view is already there in THEIR module, I should edit it.
+         But since it's NOT in the folder, I'll assume they meant inheriting from the base module.
+    -->
+    <record id="view_partner_form_inherit_escudero" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.escudero</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="resource_booking.view_partner_form" />
+        <field name="arch" type="xml">
+            <!-- No changes needed to the XML for now, as the python override handles the view mode -->
+            <xpath expr="//button[@name='action_view_resource_booking']" position="attributes">
+                <attribute name="context">{'default_partner_id': id}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
