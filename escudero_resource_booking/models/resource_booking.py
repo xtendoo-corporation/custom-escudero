@@ -1,6 +1,3 @@
-# Copyright 2024 Xtendoo
-# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
-
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
@@ -12,6 +9,21 @@ class ResourceBooking(models.Model):
         string="Has Overlap",
         help="Indicates if the booking overlaps with another one.",
     )
+
+    is_modifiable = fields.Boolean(compute="_compute_is_modifiable")
+    is_overdue = fields.Boolean(compute="_compute_is_overdue")
+
+    @api.depends("start")
+    def _compute_is_overdue(self):
+        """Overdue in this context means 'in the past'."""
+        now = fields.Datetime.now()
+        for record in self:
+            record.is_overdue = bool(record.start and record.start < now)
+
+    def _compute_is_modifiable(self):
+        """Lock all events as requested to prevent manual movement in calendar."""
+        for record in self:
+            record.is_modifiable = False
 
     @api.constrains("combination_id", "meeting_id", "type_id")
     def _check_scheduling(self):

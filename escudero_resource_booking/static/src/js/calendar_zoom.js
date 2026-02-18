@@ -52,15 +52,11 @@ patch(CalendarCommonRenderer.prototype, {
         
         const syncZoom = (level) => {
             if (this.fc && this.fc.api) {
-                // We no longer try to force-feed slotMinHeight to FC.
-                // Our new strategy is Pure CSS Coordinate Scaling (SCSS transform).
-                // We only call updateSize() to ensure scrollbars and view-total-height are correct.
+                // We notify FC to update its size to maintain scroll position and view totals
                 requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        if (this.fc && this.fc.api) {
-                            this.fc.api.updateSize();
-                        }
-                    }, 100);
+                    if (this.fc && this.fc.api) {
+                        this.fc.api.updateSize();
+                    }
                 });
             }
         };
@@ -92,6 +88,21 @@ patch(CalendarCommonRenderer.prototype, {
             if (event.start && event.end) {
                 arg.timeText = `${dateFmt(event.start)} - ${dateFmt(event.end)}`;
             }
+
+            // Resolve partner names from model filters
+            let partnerNames = "";
+            const rawRecord = record.rawRecord;
+            if (rawRecord && rawRecord.partner_ids) {
+                const partnerIds = Array.isArray(rawRecord.partner_ids) ? rawRecord.partner_ids : [];
+                const partnerSection = this.props.model.data.filterSections.partner_ids;
+                if (partnerSection && partnerSection.filters) {
+                    const names = partnerIds.map(id => {
+                        const filter = partnerSection.filters.find(f => f.value === id);
+                        return filter ? filter.label : null;
+                    }).filter(n => n);
+                    partnerNames = names.join(", ");
+                }
+            }
             
             const context = {
                 ...record,
@@ -101,6 +112,7 @@ patch(CalendarCommonRenderer.prototype, {
                 timeText: arg.timeText,
                 startTimeText: event.start ? dateFmt(event.start) : "",
                 isResourceBooking: true,
+                partnerNames: partnerNames,
             };
             
             const injectedContentStr = renderToString(this.constructor.eventTemplate, context);

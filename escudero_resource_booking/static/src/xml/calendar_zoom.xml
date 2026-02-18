@@ -16,6 +16,9 @@
     </t>
 
     <t t-inherit="web.CalendarCommonRenderer.event" t-inherit-mode="extension">
+        <xpath expr="//t[@t-if='!isTimeHidden']" position="replace">
+            
+        </xpath>
         <xpath expr="//div[hasclass('o_event_title')]" position="replace">
             <t t-if="typeof isResourceBooking !== 'undefined' &amp;&amp; isResourceBooking">
                 <!-- Premium Multi-Line Layout -->
@@ -35,13 +38,8 @@
                 <!-- TITLE LINE: ATTENDEES (Partners) -->
                 <div class="o_event_title fw-bolder">
                     <i class="fa fa-users me-1 small opacity-50"/>
-                    <t t-if="rawRecord &amp;&amp; rawRecord.partner_ids &amp;&amp; rawRecord.partner_ids.length > 0">
-                         <t t-foreach="rawRecord.partner_ids" t-as="partnerId" t-key="partnerId">
-                            <t t-if="model &amp;&amp; model.data &amp;&amp; model.data.partners &amp;&amp; model.data.partners[partnerId]">
-                                <t t-esc="model.data.partners[partnerId].name"/>
-                                <t t-if="!partnerId_last">, </t>
-                            </t>
-                         </t>
+                    <t t-if="partnerNames">
+                        <t t-esc="partnerNames"/>
                     </t>
                     <t t-else="">
                         <t t-esc="title"/>
