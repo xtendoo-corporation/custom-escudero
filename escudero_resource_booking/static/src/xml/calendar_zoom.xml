@@ -19,8 +19,22 @@
         <xpath expr="//div[hasclass('o_event_title')]" position="replace">
             <t t-if="typeof isResourceBooking !== 'undefined' &amp;&amp; isResourceBooking">
                 <!-- Premium Multi-Line Layout -->
-                <div class="o_event_title">
-                    <!-- Partner name logic -->
+
+                <!-- HEADER LINE: TIME + TYPE -->
+                <div class="o_event_header_line d-flex align-items-center gap-2 mb-1">
+                    <div class="o_event_date_time small fw-bold">
+                        <i class="fa fa-clock-o me-1 opacity-75"/>
+                        <t t-esc="startTimeText || timeText"/>
+                    </div>
+                    <div t-if="rawRecord &amp;&amp; rawRecord.type_id" class="o_event_type small fw-bold text-truncate border-start ps-2">
+                        <i class="fa fa-tag me-1 opacity-75"/>
+                        <t t-esc="rawRecord.type_id[1]"/>
+                    </div>
+                </div>
+
+                <!-- TITLE LINE: ATTENDEES (Partners) -->
+                <div class="o_event_title fw-bolder">
+                    <i class="fa fa-users me-1 small opacity-50"/>
                     <t t-if="rawRecord &amp;&amp; rawRecord.partner_ids &amp;&amp; rawRecord.partner_ids.length > 0">
                          <t t-foreach="rawRecord.partner_ids" t-as="partnerId" t-key="partnerId">
                             <t t-if="model &amp;&amp; model.data &amp;&amp; model.data.partners &amp;&amp; model.data.partners[partnerId]">
@@ -36,8 +50,8 @@
                 
                 <div t-if="rawRecord &amp;&amp; rawRecord.description" class="o_event_description" t-out="rawRecord.description"/>
                 
-                <div t-if="rawRecord &amp;&amp; rawRecord.combination_id" class="o_event_resource">
-                    <i class="fa fa-calendar-check-o small opacity-75"/>
+                <div t-if="rawRecord &amp;&amp; rawRecord.combination_id" class="o_event_resource mt-auto pt-1 border-top border-black-25">
+                    <i class="fa fa-calendar-check-o small opacity-75 me-1"/>
                     <t t-esc="rawRecord.combination_id[1]"/>
                 </div>
 
@@ -47,14 +61,12 @@
                 </div>
             </t>
             <t t-else="">
-                <!-- Default Odoo behavior for other models -->
                 <div class="o_event_title text-truncate">
                     <t t-esc="title"/>
                 </div>
             </t>
         </xpath>
-
-        <!-- Avoid duplicated descriptions for non-resource models -->
+        
         <xpath expr="//div[hasclass('o_event_description')]" position="replace">
             <t t-if="typeof isResourceBooking === 'undefined' || !isResourceBooking">
                 <div class="o_event_description text-truncate">

@@ -88,8 +88,8 @@ patch(CalendarCommonRenderer.prototype, {
         const record = this.props.model.records[event.id];
         
         if (record && this.props.model.resModel === 'resource.booking') {
+            const dateFmt = (date) => luxon.DateTime.fromJSDate(date).toFormat(this.timeFormat);
             if (event.start && event.end) {
-                const dateFmt = (date) => luxon.DateTime.fromJSDate(date).toFormat(this.timeFormat);
                 arg.timeText = `${dateFmt(event.start)} - ${dateFmt(event.end)}`;
             }
             
@@ -98,6 +98,8 @@ patch(CalendarCommonRenderer.prototype, {
                 record: record,
                 startTime: this.getStartTime(record),
                 endTime: this.getEndTime(record),
+                timeText: arg.timeText,
+                startTimeText: event.start ? dateFmt(event.start) : "",
                 isResourceBooking: true,
             };
             

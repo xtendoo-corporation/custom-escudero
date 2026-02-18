@@ -3,12 +3,9 @@
 }
 
 // 1. PRECISION: Proportional Coordinate Scaling
-// We scale the event containers vertically to match the slot height expansion.
-// This ensures FullCalendar's internal pixel coordinates stay aligned with the slots.
 .o_calendar_container {
     background-color: #fcfcfc;
     
-    // Background Grid scaling (Visual only)
     .fc-timegrid-slot,
     .fc-timegrid-slots tr,
     .fc-timegrid-axis-frame {
@@ -16,7 +13,6 @@
         min-height: calc(1.5rem * var(--calendar-zoom-level)) !important;
     }
 
-    // Coordinate stretching for events, grid lines, and indicators
     .fc-timegrid-col-events,
     .fc-timegrid-now-indicator-line,
     .fc-timegrid-col-bg {
@@ -24,16 +20,12 @@
         transform-origin: top;
     }
 
-    // Proportional downscaling for event content to avoid vertical stretching
     .fc-event-main {
-        // We stretch the box but keep the content aspect ratio
         transform: scaleY(calc(1 / var(--calendar-zoom-level)));
         transform-origin: top;
-        // Adjust height to allow content to fill the stretched box
         height: calc(100% * var(--calendar-zoom-level)) !important;
     }
 
-    // Grid aesthetic
     .fc-timegrid-slots {
         border-color: #e0e0e0;
         .fc-timegrid-slot-minor {
@@ -41,54 +33,72 @@
         }
     }
 
-    // Axis Labels alignment
     .fc-timegrid-slot-label-cushion {
         font-size: 0.75rem;
         font-weight: 600;
         color: #666;
         text-transform: uppercase;
         display: block;
-        margin-top: -12px; // Adjusted for better centering on scaled slots
+        margin-top: -12px;
     }
 }
 
-// 2. PREMIUM EVENT STYLING: High Contrast & Multi-line
+// 2. PREMIUM EVENT STYLING: High Contrast & Multi-line (GRID BOXES)
 .o_calendar_renderer {
     .fc-event {
         border-radius: 4px !important;
         border: none !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
         margin: 1px 2px !important;
-        overflow: visible !important; // Allow warning icons to overflow if needed
+        overflow: visible !important;
         
-        &:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-            z-index: 50 !important;
-        }
+        &:hover { z-index: 50 !important; }
 
         .fc-event-main {
-            padding: 4px 6px !important;
+            padding: 3px 6px !important; // Slightly more compact
             display: flex;
             flex-direction: column;
             gap: 1px;
             
+            // Header: Time + Type
+            .o_event_header_line {
+                line-height: 1;
+                margin-bottom: 2px;
+                
+                .o_event_date_time {
+                    color: rgba(0,0,0,0.6);
+                    font-size: 0.7rem;
+                    white-space: nowrap;
+                }
+                
+                .o_event_type {
+                    color: rgba(0,0,0,0.85);
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                }
+            }
+
+            // Title: Attendees (Partners)
             .o_event_title {
                 font-weight: 800 !important;
-                font-size: 0.95em;
+                font-size: 0.9em;
                 line-height: 1.1;
-                color: rgba(0,0,0,0.9) !important;
+                color: rgba(0,0,0,1) !important;
                 margin-bottom: 2px;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
+                
+                i {
+                    font-size: 0.85em;
+                }
             }
 
             .o_event_description {
-                font-size: 0.85em;
+                font-size: 0.8em;
                 line-height: 1.2;
                 font-weight: 500;
-                color: rgba(0,0,0,0.7) !important;
-                white-space: normal !important;
+                color: rgba(0,0,0,0.65) !important;
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
                 line-clamp: 2;
@@ -97,24 +107,21 @@
             }
 
             .o_event_resource {
-                margin-top: auto;
-                font-size: 0.75em;
+                font-size: 0.7rem;
                 font-weight: 700;
-                color: rgba(0,0,0,0.55);
-                border-top: 1px solid rgba(0,0,0,0.05);
-                padding-top: 2px;
-                display: flex;
-                align-items: center;
-                gap: 3px;
+                color: rgba(0,0,0,0.5);
                 text-transform: uppercase;
-                letter-spacing: 0.02em;
+                letter-spacing: 0.01em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
 
         .o_overlap_warning {
             position: absolute;
-            top: 2px;
-            right: 2px;
+            top: 1px;
+            right: 1px;
             font-size: 1.1em;
             color: #d9534f;
             text-shadow: 0 0 2px white;
@@ -128,23 +135,28 @@
     background-color: #f8f9fa !important;
     border-left: 1px solid #dee2e6 !important;
     padding: 10px;
+    .o_calendar_sidebar .o_calendar_filter {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        padding: 8px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        h5 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #495057; margin-bottom: 10px; }
+    }
+}
 
-    .o_calendar_sidebar {
-        .o_calendar_filter {
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-            padding: 8px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            
-            h5 {
-                font-size: 0.85rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                color: #495057;
-                margin-bottom: 10px;
-            }
-        }
+// 4. PREVIEW (POPOVER) ADJUSTMENTS
+div.popover.o_calendar_popover {
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+    .card-header {
+        background-color: #fff !important;
+        border-bottom: 1px solid #eee !important;
+        .popover-header { font-weight: 700 !important; color: #333 !important; }
+    }
+    .o_cw_body .list-group-item {
+        border-color: #f1f1f1 !important;
+        .fw-bold { color: #555 !important; }
     }
 }
