@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Rename main app menu from "Resource Bookings" to "Citas" -->
+    <record id="resource_booking.resource_booking_main_menu" model="ir.ui.menu">
+        <field name="name">Citas</field>
+    </record>
+
+    <!-- Rename the bookings submenu -->
+    <record id="resource_booking.resource_booking_menu" model="ir.ui.menu">
+        <field name="name">Citas</field>
+    </record>
+
+    <!-- Rename the action name -->
+    <record id="resource_booking.resource_booking_action" model="ir.actions.act_window">
+        <field name="name">Citas</field>
+    </record>
+</odoo>

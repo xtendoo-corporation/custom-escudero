@@ -21,14 +21,39 @@ class ResourceBooking(models.Model):
             record.is_overdue = bool(record.start and record.start < now)
 
     def _compute_is_modifiable(self):
-        """Lock all events as requested to prevent manual movement in calendar."""
+        """Always allow modifications - no deadline restrictions."""
         for record in self:
-            record.is_modifiable = False
+            record.is_modifiable = True
+
+    @api.onchange("partner_ids")
+    def _onchange_partner_ids_set_name(self):
+        """Auto-set booking name to the first attendee's name."""
+        for record in self:
+            if record.partner_ids:
+                record.name = record.partner_ids[:1].name
+            else:
+                record.name = False
+
+    @api.depends("name", "partner_ids", "type_id", "meeting_id")
+    @api.depends_context("using_portal")
+    def _compute_display_name(self):
+        """Override display_name to show name + type for calendar events."""
+        res = super()._compute_display_name()
+        for item in self:
+            if not self.env.context.get("using_portal") and item.id:
+                parts = []
+                if item.name:
+                    parts.append(item.name)
+                if item.type_id:
+                    parts.append(item.type_id.display_name)
+                if parts:
+                    item.display_name = " - ".join(parts)
+        return res
 
     @api.constrains("combination_id", "meeting_id", "type_id")
     def _check_scheduling(self):
         """Allow overlapping bookings by bypassing all validation."""
-        # We bypass all checks to allow the user to save bookings even without 
+        # We bypass all checks to allow the user to save bookings even without
         # resources or in case of overlap, as requested.
         return True
 
@@ -50,8 +75,8 @@ class ResourceBooking(models.Model):
     @api.depends("type_id.color")
     def _compute_type_color(self):
         for record in self:
-            # We use the color directly from the type. 
-            # If the picker is 1-indexed and calendar is 0-indexed, 
+            # We use the color directly from the type.
+            # If the picker is 1-indexed and calendar is 0-indexed,
             # we'll handle any shift visually if needed, but starting simple.
             record.type_color = record.type_id.color or 0
 
@@ -63,9 +88,9 @@ class ResourceBooking(models.Model):
             if not record.start or not record.stop or not record.combination_id:
                 record.has_overlap = False
                 continue
-            
+
             start_dt = fields.Datetime.context_timestamp(record, record.start)
             end_dt = fields.Datetime.context_timestamp(record, record.stop)
             available_intervals = record._get_intervals(start_dt, end_dt)
-            
+
             record.has_overlap = not _availability_is_fitting(available_intervals, start_dt, end_dt)

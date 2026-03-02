@@ -1,56 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-inherit="web.CalendarController" t-inherit-mode="extension">
-        <xpath expr="//div[hasclass('o_calendar_navigation_buttons')]" position="after">
-            <t t-if="props.resModel === 'resource.booking'">
-                <div class="o_calendar_zoom_buttons btn-group d-print-none px-2 border-start">
-                    <button class="btn btn-secondary" title="Zoom Out" t-on-click="zoomOut">
-                        <i class="fa fa-search-minus"/>
-                    </button>
-                    <button class="btn btn-secondary" title="Zoom In" t-on-click="zoomIn">
-                        <i class="fa fa-search-plus"/>
-                    </button>
-                </div>
-            </t>
-        </xpath>
-    </t>
 
     <t t-inherit="web.CalendarCommonRenderer.event" t-inherit-mode="extension">
         <xpath expr="//t[@t-if='!isTimeHidden']" position="replace">
-            
+
         </xpath>
         <xpath expr="//div[hasclass('o_event_title')]" position="replace">
             <t t-if="typeof isResourceBooking !== 'undefined' &amp;&amp; isResourceBooking">
-                <!-- Premium Multi-Line Layout -->
-
-                <!-- HEADER LINE: TIME + TYPE -->
-                <div class="o_event_header_line d-flex align-items-center gap-2 mb-1">
-                    <div class="o_event_date_time small fw-bold">
-                        <i class="fa fa-clock-o me-1 opacity-75"/>
-                        <t t-esc="startTimeText || timeText"/>
-                    </div>
-                    <div t-if="rawRecord &amp;&amp; rawRecord.type_id" class="o_event_type small fw-bold text-truncate border-start ps-2">
-                        <i class="fa fa-tag me-1 opacity-75"/>
-                        <t t-esc="rawRecord.type_id[1]"/>
-                    </div>
-                </div>
-
-                <!-- TITLE LINE: ATTENDEES (Partners) -->
-                <div class="o_event_title fw-bolder">
-                    <i class="fa fa-users me-1 small opacity-50"/>
-                    <t t-if="partnerNames">
-                        <t t-esc="partnerNames"/>
-                    </t>
-                    <t t-else="">
+                <!-- FIRST LINE: NAME+TYPE (from display_name) + TIME -->
+                <div class="o_event_title fw-bolder text-truncate">
+                    <t t-if="title">
                         <t t-esc="title"/>
                     </t>
-                </div>
-                
-                <div t-if="rawRecord &amp;&amp; rawRecord.description" class="o_event_description" t-out="rawRecord.description"/>
-                
-                <div t-if="rawRecord &amp;&amp; rawRecord.combination_id" class="o_event_resource mt-auto pt-1 border-top border-black-25">
-                    <i class="fa fa-calendar-check-o small opacity-75 me-1"/>
-                    <t t-esc="rawRecord.combination_id[1]"/>
+                    <t t-elif="partnerNames">
+                        <t t-esc="partnerNames"/>
+                    </t>
+                    <span class="o_event_time_inline"> <t t-esc="startTimeText || timeText"/></span>
                 </div>
 
                 <!-- Overlap Warning Icon -->
@@ -64,13 +29,7 @@
                 </div>
             </t>
         </xpath>
-        
-        <xpath expr="//div[hasclass('o_event_description')]" position="replace">
-            <t t-if="typeof isResourceBooking === 'undefined' || !isResourceBooking">
-                <div class="o_event_description text-truncate">
-                    <t t-esc="rawRecord &amp;&amp; rawRecord.description"/>
-                </div>
-            </t>
-        </xpath>
+
+
     </t>
 </templates>
