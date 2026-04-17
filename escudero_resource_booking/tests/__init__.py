@@ -1,1 +1,2 @@
 from . import test_overlapping_booking
+from . import test_resource_booking_type_default_combination
