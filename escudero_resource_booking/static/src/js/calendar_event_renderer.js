@@ -40,14 +40,18 @@ patch(CalendarCommonRenderer.prototype, {
                 }
             }
 
+            const isMonth = this.props.model.scale === 'month';
+
             const context = {
                 ...record,
                 record: record,
+                title: record.title || record.rawRecord.display_name, // Fallback to display_name
                 startTime: this.getStartTime(record),
                 endTime: this.getEndTime(record),
                 timeText: arg.timeText,
                 startTimeText: event.start ? dateFmt(event.start) : "",
                 isResourceBooking: true,
+                isMonth: isMonth,
                 partnerNames: partnerNames,
             };
 
@@ -60,4 +64,3 @@ patch(CalendarCommonRenderer.prototype, {
         return super.onEventContent(arg);
     }
 });
-

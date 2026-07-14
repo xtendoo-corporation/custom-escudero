@@ -3,25 +3,35 @@
 
     <t t-inherit="web.CalendarCommonRenderer.event" t-inherit-mode="extension">
         <xpath expr="//t[@t-if='!isTimeHidden']" position="replace">
-
+            <t t-if="typeof isResourceBooking === 'undefined' || !isResourceBooking">
+                <span class="d-none d-lg-inline fc-time" t-esc="startTime" />
+            </t>
         </xpath>
         <xpath expr="//div[hasclass('o_event_title')]" position="replace">
             <t t-if="typeof isResourceBooking !== 'undefined' &amp;&amp; isResourceBooking">
-                <!-- FIRST LINE: NAME+TYPE (from display_name) + TIME -->
-                <div class="o_event_title fw-bolder text-truncate">
-                    <t t-if="title">
-                        <t t-esc="title"/>
-                    </t>
-                    <t t-elif="partnerNames">
-                        <t t-esc="partnerNames"/>
-                    </t>
-                    <span class="o_event_time_inline"> <t t-esc="startTimeText || timeText"/></span>
-                </div>
+                <!-- MONTH VIEW: Simple and compact -->
+                <t t-if="isMonth">
+                    <div class="o_event_title fw-bold">
+                        <t t-esc="title || partnerNames || 'Cita'"/>
+                    </div>
+                </t>
+                <!-- WEEK/DAY VIEW: Spacious and detailed -->
+                <t t-else="">
+                    <div class="o_event_title fw-bolder text-truncate">
+                        <t t-if="title">
+                            <t t-esc="title"/>
+                        </t>
+                        <t t-elif="partnerNames">
+                            <t t-esc="partnerNames"/>
+                        </t>
+                        <span class="o_event_time_inline"> <t t-esc="startTimeText || timeText"/></span>
+                    </div>
 
-                <!-- Overlap Warning Icon -->
-                <div t-if="rawRecord &amp;&amp; rawRecord.has_overlap" class="o_overlap_warning" title="Esta cita solapa con otra">
-                    <i class="fa fa-warning"/>
-                </div>
+                    <!-- Overlap Warning Icon -->
+                    <div t-if="rawRecord &amp;&amp; rawRecord.has_overlap" class="o_overlap_warning" title="Esta cita solapa con otra">
+                        <i class="fa fa-warning"/>
+                    </div>
+                </t>
             </t>
             <t t-else="">
                 <div class="o_event_title text-truncate">

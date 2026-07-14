@@ -26,6 +26,9 @@
             <xpath expr="//calendar" position="attributes">
                 <attribute name="color">type_color</attribute>
             </xpath>
+            <xpath expr="//field[@name='name']" position="attributes">
+                <attribute name="invisible">0</attribute>
+            </xpath>
             <xpath expr="//field[@name='type_id']" position="after">
                 <field name="type_color" invisible="1" />
             </xpath>
