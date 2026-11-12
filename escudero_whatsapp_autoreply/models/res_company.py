@@ -7,6 +7,16 @@ class ResCompany(models.Model):
     whatsapp_autoreply_enabled = fields.Boolean(
         string="Respuesta automática de WhatsApp",
     )
+    whatsapp_autoreply_mode = fields.Selection(
+        [("template", "Plantilla"), ("text", "Texto personalizado")],
+        string="Tipo de respuesta automática",
+        default="template",
+        required=True,
+    )
+    whatsapp_autoreply_text = fields.Text(
+        string="Texto de respuesta automática",
+        help="Texto que se envía como respuesta automática (texto libre).",
+    )
     whatsapp_autoreply_template_id = fields.Many2one(
         "mail.whatsapp.template",
         string="Plantilla de respuesta automática",

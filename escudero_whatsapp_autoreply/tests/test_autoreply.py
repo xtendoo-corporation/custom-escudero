@@ -149,6 +149,27 @@ class TestWhatsappAutoreply(TransactionCase):
             calls[0].kwargs["json"]["text"]["body"], "Primera línea\nSegunda línea"
         )
 
+    def test_custom_text_reply(self):
+        self.company.write(
+            {
+                "whatsapp_autoreply_mode": "text",
+                "whatsapp_autoreply_text": "Te respondemos en breve.",
+                "whatsapp_autoreply_template_id": False,
+            }
+        )
+        # Works even for unknown contacts.
+        calls = self._reply_calls(self._receive(self._payload(wa_id="34699000111")))
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(
+            calls[0].kwargs["json"]["text"]["body"], "Te respondemos en breve."
+        )
+
+    def test_custom_text_empty_does_not_reply(self):
+        self.company.write(
+            {"whatsapp_autoreply_mode": "text", "whatsapp_autoreply_text": "  "}
+        )
+        self.assertFalse(self._reply_calls(self._receive()))
+
     def test_disabled_does_not_reply(self):
         self.company.whatsapp_autoreply_enabled = False
         post_mock = self._receive()

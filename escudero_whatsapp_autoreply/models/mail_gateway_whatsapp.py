@@ -42,27 +42,41 @@ class MailGatewayWhatsapp(models.AbstractModel):
 
     def _whatsapp_autoreply(self, chat, value):
         chat = chat.sudo()
-        template = self._whatsapp_autoreply_template(chat)
-        if not template:
-            return False
         company = chat.gateway_id.company_id or self.env.company
+        if not company.whatsapp_autoreply_enabled:
+            return False
+        use_text = company.whatsapp_autoreply_mode == "text"
+        if use_text:
+            text = (company.whatsapp_autoreply_text or "").strip()
+            if not text:
+                return False
+        else:
+            template = self._whatsapp_autoreply_template(chat)
+            if not template:
+                return False
         if self._whatsapp_autoreply_in_cooldown(chat, company):
             return False
         author = self._get_author(chat.gateway_id, value)
         partner = author if author and author._name == "res.partner" else False
         if partner and len(partner) > 1:
             partner = partner[0]
-        if not partner:
-            if template.variable_ids:
-                _logger.info(
-                    "WhatsApp autoreply skipped on channel %s: unknown contact "
-                    "and template has variables",
-                    chat.id,
-                )
-                return False
-            # No variables to fill in, any record will do to render the template.
-            partner = company.partner_id
-        template = template.with_context(default_res_id=partner.id)
+        if use_text:
+            body = text
+            partner = partner or company.partner_id
+        else:
+            if not partner:
+                if template.variable_ids:
+                    _logger.info(
+                        "WhatsApp autoreply skipped on channel %s: unknown contact "
+                        "and template has variables",
+                        chat.id,
+                    )
+                    return False
+                # No variables to fill in, any record will do to render it.
+                partner = company.partner_id
+            body = template.with_context(
+                default_res_id=partner.id
+            ).render_body_message()
         chat.last_autoreply_date = fields.Datetime.now()
         # The webhook controller dispatches with no_gateway_notification=True (so
         # incoming messages are not echoed back). This context is inherited here and
@@ -76,7 +90,7 @@ class MailGatewayWhatsapp(models.AbstractModel):
         chat.with_context(
             no_gateway_notification=False, default_res_id=partner.id
         ).message_post(
-            body=plaintext2html(template.render_body_message()),
+            body=plaintext2html(body),
             # Explicit author so mail_gateway_whatsapp_variables does not take
             # our own reply for an incoming message.
             author_id=self.env.user.partner_id.id,

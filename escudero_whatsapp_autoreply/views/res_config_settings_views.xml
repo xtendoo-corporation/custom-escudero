@@ -11,16 +11,28 @@
                     <block title="Respuesta automática de WhatsApp" name="whatsapp_autoreply_block">
                         <setting
                             string="Responder automáticamente"
-                            help="Al recibir un mensaje de WhatsApp se responde con una plantilla."
+                            help="Al recibir un mensaje de WhatsApp se responde con una plantilla o un texto personalizado."
                         >
                             <field name="whatsapp_autoreply_enabled" />
                             <div class="content-group" invisible="not whatsapp_autoreply_enabled">
                                 <div class="mt16">
+                                    <label for="whatsapp_autoreply_mode" class="o_light_label" />
+                                    <field name="whatsapp_autoreply_mode" widget="radio" />
+                                </div>
+                                <div class="mt8" invisible="whatsapp_autoreply_mode != 'template'">
                                     <label for="whatsapp_autoreply_template_id" class="o_light_label" />
                                     <field
                                         name="whatsapp_autoreply_template_id"
-                                        required="whatsapp_autoreply_enabled"
+                                        required="whatsapp_autoreply_enabled and whatsapp_autoreply_mode == 'template'"
                                         options="{'no_create': True}"
+                                    />
+                                </div>
+                                <div class="mt8" invisible="whatsapp_autoreply_mode != 'text'">
+                                    <label for="whatsapp_autoreply_text" class="o_light_label" />
+                                    <field
+                                        name="whatsapp_autoreply_text"
+                                        required="whatsapp_autoreply_enabled and whatsapp_autoreply_mode == 'text'"
+                                        placeholder="Escribe el mensaje a enviar..."
                                     />
                                 </div>
                                 <div class="mt8">

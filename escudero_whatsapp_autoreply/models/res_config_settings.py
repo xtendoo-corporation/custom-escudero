@@ -13,3 +13,9 @@ class ResConfigSettings(models.TransientModel):
     whatsapp_autoreply_cooldown_hours = fields.Float(
         related="company_id.whatsapp_autoreply_cooldown_hours", readonly=False
     )
+    whatsapp_autoreply_mode = fields.Selection(
+        related="company_id.whatsapp_autoreply_mode", readonly=False
+    )
+    whatsapp_autoreply_text = fields.Text(
+        related="company_id.whatsapp_autoreply_text", readonly=False
+    )
