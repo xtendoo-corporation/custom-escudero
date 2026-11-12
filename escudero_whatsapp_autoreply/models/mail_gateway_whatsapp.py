@@ -63,8 +63,14 @@ class MailGatewayWhatsapp(models.AbstractModel):
             partner = company.partner_id
         template = template.with_context(default_res_id=partner.id)
         chat.last_autoreply_date = fields.Datetime.now()
+        # The webhook controller dispatches with no_gateway_notification=True (so
+        # incoming messages are not echoed back). This context is inherited here and
+        # would make message_post skip the gateway notification: the reply would be
+        # stored in Odoo but never sent to WhatsApp. Re-enable it for our reply.
         chat.with_context(
-            whatsapp_template_id=template.id, default_res_id=partner.id
+            no_gateway_notification=False,
+            whatsapp_template_id=template.id,
+            default_res_id=partner.id,
         ).message_post(
             body=template.render_body_message(),
             # Explicit author so mail_gateway_whatsapp_variables does not take

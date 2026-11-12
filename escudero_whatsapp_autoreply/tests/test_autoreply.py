@@ -87,9 +87,10 @@ class TestWhatsappAutoreply(TransactionCase):
             response = MagicMock(status_code=200)
             response.json.return_value = {"messages": [{"id": "wamid.OUT"}]}
             post_mock.return_value = response
-            self.env["mail.gateway.whatsapp"]._receive_update(
-                self.gateway, payload or self._payload()
-            )
+            # Same context as the webhook controller (gateway.py).
+            self.env["mail.gateway.whatsapp"].with_context(
+                no_gateway_notification=True
+            )._receive_update(self.gateway, payload or self._payload())
         return post_mock
 
     def _channel(self, wa_id="34611222333"):
@@ -122,6 +123,13 @@ class TestWhatsappAutoreply(TransactionCase):
         )
         self.assertEqual(len(outgoing), 1)
         self.assertIn("Cliente Test", outgoing.body)
+        # The reply must have gone through the gateway (a single time).
+        notification = outgoing.notification_ids.filtered(
+            lambda n: n.notification_type == "gateway"
+        )
+        self.assertEqual(len(notification), 1)
+        self.assertEqual(notification.notification_status, "sent")
+        self.assertEqual(notification.gateway_message_id, "wamid.OUT")
 
     def test_disabled_does_not_reply(self):
         self.company.whatsapp_autoreply_enabled = False
