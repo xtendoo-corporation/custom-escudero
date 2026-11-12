@@ -87,33 +87,42 @@ class TestWhatsappAutoreply(TransactionCase):
             response = MagicMock(status_code=200)
             response.json.return_value = {"messages": [{"id": "wamid.OUT"}]}
             post_mock.return_value = response
-            # Same context as the webhook controller (gateway.py).
-            self.env["mail.gateway.whatsapp"].with_context(
+            # Same as the webhook controller (gateway.py): dispatcher and gateway
+            # both live in an env with no_gateway_notification=True.
+            dispatcher = self.env["mail.gateway.whatsapp"].with_context(
                 no_gateway_notification=True
-            )._receive_update(self.gateway, payload or self._payload())
+            )
+            dispatcher._receive_update(
+                dispatcher.env["mail.gateway"].browse(self.gateway.id),
+                payload or self._payload(),
+            )
         return post_mock
 
     def _channel(self, wa_id="34611222333"):
         return self.env["discuss.channel"].browse(self.gateway._get_channel_id(wa_id))
 
-    def _template_calls(self, post_mock):
+    def _reply_calls(self, post_mock):
         return [
             call
             for call in post_mock.call_args_list
-            if call.kwargs.get("json", {}).get("type") == "template"
+            if call.kwargs.get("json", {}).get("type") == "text"
         ]
 
-    def test_reply_sent_with_template(self):
+    def test_reply_sent_as_free_text(self):
         post_mock = self._receive()
-        calls = self._template_calls(post_mock)
+        calls = self._reply_calls(post_mock)
         self.assertEqual(len(calls), 1)
         payload = calls[0].kwargs["json"]
         self.assertEqual(payload["to"], "34611222333")
-        self.assertEqual(payload["template"]["name"], self.template.template_name)
-        self.assertEqual(payload["template"]["language"], {"code": "es"})
-        self.assertEqual(
-            payload["template"]["components"][0]["parameters"][0]["text"],
-            "Cliente Test",
+        # Free text built from the template, not a template message.
+        self.assertNotIn("template", payload)
+        self.assertEqual(payload["text"]["body"], "Hola Cliente Test, gracias.")
+        self.assertFalse(
+            [
+                c
+                for c in post_mock.call_args_list
+                if c.kwargs.get("json", {}).get("type") == "template"
+            ]
         )
         channel = self._channel()
         self.assertTrue(channel.last_autoreply_date)
@@ -131,20 +140,29 @@ class TestWhatsappAutoreply(TransactionCase):
         self.assertEqual(notification.notification_status, "sent")
         self.assertEqual(notification.gateway_message_id, "wamid.OUT")
 
+    def test_multiline_body_keeps_line_breaks(self):
+        template = self._create_template("Multi", "Primera línea\nSegunda línea")
+        self.company.whatsapp_autoreply_template_id = template
+        calls = self._reply_calls(self._receive())
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(
+            calls[0].kwargs["json"]["text"]["body"], "Primera línea\nSegunda línea"
+        )
+
     def test_disabled_does_not_reply(self):
         self.company.whatsapp_autoreply_enabled = False
         post_mock = self._receive()
-        self.assertFalse(self._template_calls(post_mock))
+        self.assertFalse(self._reply_calls(post_mock))
         self.assertFalse(self._channel().last_autoreply_date)
         self.assertEqual(len(self._channel().message_ids), 1)
 
     def test_no_template_does_not_reply(self):
         self.company.whatsapp_autoreply_template_id = False
-        self.assertFalse(self._template_calls(self._receive()))
+        self.assertFalse(self._reply_calls(self._receive()))
 
     def test_not_approved_template_does_not_reply(self):
         self.template.state = "draft"
-        self.assertFalse(self._template_calls(self._receive()))
+        self.assertFalse(self._reply_calls(self._receive()))
 
     def test_template_of_other_gateway_does_not_reply(self):
         other = self.env["mail.gateway"].create(
@@ -157,26 +175,26 @@ class TestWhatsappAutoreply(TransactionCase):
             }
         )
         self.template.gateway_id = other
-        self.assertFalse(self._template_calls(self._receive()))
+        self.assertFalse(self._reply_calls(self._receive()))
 
     def test_cooldown(self):
-        self.assertEqual(len(self._template_calls(self._receive())), 1)
+        self.assertEqual(len(self._reply_calls(self._receive())), 1)
         # Second message right away: no new reply.
-        self.assertFalse(self._template_calls(self._receive()))
+        self.assertFalse(self._reply_calls(self._receive()))
         # After the cooldown: replies again.
         self._channel().last_autoreply_date = fields.Datetime.now() - timedelta(
             hours=25
         )
-        self.assertEqual(len(self._template_calls(self._receive())), 1)
+        self.assertEqual(len(self._reply_calls(self._receive())), 1)
 
     def test_cooldown_zero_always_replies(self):
         self.company.whatsapp_autoreply_cooldown_hours = 0
-        self.assertEqual(len(self._template_calls(self._receive())), 1)
-        self.assertEqual(len(self._template_calls(self._receive())), 1)
+        self.assertEqual(len(self._reply_calls(self._receive())), 1)
+        self.assertEqual(len(self._reply_calls(self._receive())), 1)
 
     def test_unknown_contact_with_variables_skipped(self):
         post_mock = self._receive(self._payload(wa_id="34699000111"))
-        self.assertFalse(self._template_calls(post_mock))
+        self.assertFalse(self._reply_calls(post_mock))
         # The incoming message is kept.
         self.assertEqual(len(self._channel("34699000111").message_ids), 1)
 
@@ -184,12 +202,12 @@ class TestWhatsappAutoreply(TransactionCase):
         template = self._create_template("Plain", "Gracias por escribirnos")
         self.company.whatsapp_autoreply_template_id = template
         post_mock = self._receive(self._payload(wa_id="34699000111"))
-        self.assertEqual(len(self._template_calls(post_mock)), 1)
+        self.assertEqual(len(self._reply_calls(post_mock)), 1)
 
     def test_message_without_content_is_ignored(self):
         payload = self._payload(extra={"type": "reaction"})
         payload["entry"][0]["changes"][0]["value"]["messages"][0].pop("text")
-        self.assertFalse(self._template_calls(self._receive(payload)))
+        self.assertFalse(self._reply_calls(self._receive(payload)))
 
     def test_failure_in_reply_keeps_incoming_message(self):
         with patch.object(

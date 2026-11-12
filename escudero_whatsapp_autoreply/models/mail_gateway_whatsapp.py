@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 from odoo import fields, models
+from odoo.tools import plaintext2html
 
 _logger = logging.getLogger(__name__)
 
@@ -67,12 +68,15 @@ class MailGatewayWhatsapp(models.AbstractModel):
         # incoming messages are not echoed back). This context is inherited here and
         # would make message_post skip the gateway notification: the reply would be
         # stored in Odoo but never sent to WhatsApp. Re-enable it for our reply.
+        #
+        # The reply is sent as free text built from the template content, not as
+        # a WhatsApp template message: it is a response to a message just received
+        # (inside the 24h customer service window), so it does not depend on the
+        # template category/approval on Meta. Hence no ``whatsapp_template_id``.
         chat.with_context(
-            no_gateway_notification=False,
-            whatsapp_template_id=template.id,
-            default_res_id=partner.id,
+            no_gateway_notification=False, default_res_id=partner.id
         ).message_post(
-            body=template.render_body_message(),
+            body=plaintext2html(template.render_body_message()),
             # Explicit author so mail_gateway_whatsapp_variables does not take
             # our own reply for an incoming message.
             author_id=self.env.user.partner_id.id,

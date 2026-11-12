@@ -11,7 +11,8 @@ class ResCompany(models.Model):
         "mail.whatsapp.template",
         string="Plantilla de respuesta automática",
         domain="[('state', '=', 'approved')]",
-        help="Plantilla de WhatsApp que se envía al recibir un mensaje.",
+        help="Se envía su contenido, como texto libre, al recibir un mensaje "
+        "(no como plantilla de Meta: se responde dentro de la ventana de 24 h).",
     )
     whatsapp_autoreply_cooldown_hours = fields.Float(
         string="Horas entre respuestas automáticas",
